@@ -1,5 +1,7 @@
 package site.hobbyup.class_final_back.config.Oauth.web;
 
+import javax.xml.transform.stream.StreamSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -40,16 +42,17 @@ public class UsersController {
         System.out.println("디버그:정보받기 완료");
         System.out.println("디버그:" + kakaoProfile.getKakao_account().getEmail());
         int idx = kakaoProfile.getKakao_account().getEmail().indexOf("@");
-        String username = kakaoProfile.getKakao_account().getEmail().substring(0,
-                idx);
-        System.out.println("유저네임:" + username);
+        System.out.println("디버그:이메일받기");
+        String username = (kakaoProfile.getKakao_account().getEmail().substring(0,
+                idx));
+        System.out.println("디버그 유저네임:" + username);
 
         Users kakaoUser = Users.builder()
                 .username(username)
                 .password(kakaoProfile.getKakao_account().getEmail() + kakaoProfile.getId())
                 .oauth("kakao")
                 .build();
-
+        System.out.println("디버그:dto에 담기");
         // 회원가입, 로그인
         usersService.join(kakaoUser);
 
