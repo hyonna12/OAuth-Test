@@ -1,9 +1,6 @@
 package site.hobbyup.class_final_back.domain.user;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -21,17 +18,15 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import site.hobbyup.class_final_back.config.enums.UserEnum;
 import site.hobbyup.class_final_back.domain.AuditingTime;
 import site.hobbyup.class_final_back.dto.user.UserReqDto.UserUpdateReqDto;
 
-@ToString(exclude = "socialAuth")
 @DynamicInsert
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@Table(name = "users")
 @Entity
+@Table(name = "users")
 @SecondaryTables({
         @SecondaryTable(name = "social_auth", pkJoinColumns = @PrimaryKeyJoinColumn(name = "user_id"))
 })

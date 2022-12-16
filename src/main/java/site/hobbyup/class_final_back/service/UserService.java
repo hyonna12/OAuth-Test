@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import site.hobbyup.class_final_back.config.Oauth.dto.kakao.KakaoReqDto;
+import site.hobbyup.class_final_back.config.Oauth.dto.kakao.KakaoRespDto;
 import site.hobbyup.class_final_back.config.enums.UserEnum;
 import site.hobbyup.class_final_back.config.exception.CustomApiException;
 import site.hobbyup.class_final_back.domain.category.Category;
@@ -188,6 +190,55 @@ public class UserService {
         User userPS = userRepository.findById(id)
                 .orElseThrow(() -> new CustomApiException("유저 정보가 없습니다.", HttpStatus.BAD_REQUEST));
         return new UserInitRespDto(userPS);
+    }
+
+    @Transactional
+    public KakaoRespDto kakaoJoin(KakaoReqDto kakaoReqDto) {
+        log.debug("디버그 : UserService-join 실행됨");
+
+        // 1. 비밀번호 암호화
+        String rawPassword = kakaoReqDto.getPassword();
+        String encPassword = passwordEncoder.encode(rawPassword);
+        kakaoReqDto.setPassword(encPassword);
+
+        // phoneNum, role
+        // 2. 회원가입
+        User userPS = userRepository.save(kakaoReqDto.toEntity());
+
+        // 3. 관심사 저장
+        log.debug("디버그 : JoinReqDto가 선택한 카테고리들 : " + joinReqDto.getCategoryIds());
+
+        if (joinReqDto.getCategoryIds() == null) {
+            return new JoinRespDto(userPS);
+        }
+        List<Category> categoryListPS = categoryRepository.findAllById(joinReqDto.getCategoryIds());
+
+        for (Category category : categoryListPS) {
+            log.debug("디버그 : 유저가 선택한 카테고리" + category.getId());
+            Interest interest = Interest.builder().category(category).user(userPS).build();
+            interestRepository.save(interest);
+        }
+
+        // 4. 카테고리를 다시 select함
+        List<Interest> interestListPS = interestRepository.findAllByUserId(userPS.getId());
+
+        // 5. 쿠폰 증정
+        Coupon coupon = Coupon.builder().title("회원가입 쿠폰").price(10000L).expiredDate("2022-12-22").user(userPS).build();
+        couponRepository.save(coupon);
+
+        // 6. role=expert일 시, expert 테이블에도 추가 입력
+        if (userPS.getRole().getValue().equals("전문가")) {
+            expertRepository
+                    .save(Expert.builder()
+                            .satisfaction(0L)
+                            .totalLesson(0L)
+                            .isApproval(false)
+                            .user(userPS)
+                            .build());
+        }
+
+        // 67 DTO 응답
+        return new JoinRespDto(userPS, interestListPS);
     }
 
 }

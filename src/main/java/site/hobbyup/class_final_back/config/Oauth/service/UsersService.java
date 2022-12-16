@@ -10,17 +10,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import site.hobbyup.class_final_back.config.Oauth.domain.Users;
-import site.hobbyup.class_final_back.config.Oauth.domain.UsersRepository;
+import site.hobbyup.class_final_back.config.Oauth.dto.kakao.KakaoReqDto;
+import site.hobbyup.class_final_back.domain.user.UserRepository;
 
 @Service
 public class UsersService {
 
-    private UsersRepository userRepository;
+    private UserRepository userRepository;
     private BCryptPasswordEncoder bCryptPasswordEncoder;
     private AuthenticationManager authenticationManager;
 
-    public UsersService(UsersRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder,
+    public UsersService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder,
             AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
@@ -28,16 +28,20 @@ public class UsersService {
     }
 
     @Transactional
-    public void join(Users user) {
+    public void join(KakaoReqDto user) {
+        System.out.println("디버그:회원가입시작");
         if (user.getOauth() != null) {// 카카오 로그인
+            System.out.println("디버그:로그인");
             String rawPassword = user.getPassword();
-            if (!kakaovalidateDuplicateUser(user).isPresent()) {
-                // 회원가입
+            System.out.println("디버그:비번");
+            if (!kakaovalidateDuplicateUser(user).isPresent()) {// 회원가입
+                System.out.println("디버그:회원가입");
                 String encPassword = bCryptPasswordEncoder.encode(user.getPassword());
                 user.setPassword(encPassword);
 
-                userRepository.save(user);
+                userRepository.save(user.toEntity(rawPassword, encPassword, rawPassword));
             }
+            System.out.println("디버그:완료");
             Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), rawPassword));
             SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -45,12 +49,12 @@ public class UsersService {
             validateDuplicateUser(user);
             String encPassword = bCryptPasswordEncoder.encode(user.getPassword());
             user.setPassword(encPassword);
-            userRepository.save(user);
+            userRepository.save(user.toEntity(encPassword, encPassword, encPassword));
         }
     }
 
     @Transactional(readOnly = true)
-    public void validateDuplicateUser(Users user) {
+    public void validateDuplicateUser(KakaoReqDto user) {
         userRepository.findByUsername(user.getUsername())
                 .ifPresent(m -> {
                     throw new IllegalStateException("이미 존재하는 회원");
@@ -58,7 +62,7 @@ public class UsersService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Users> kakaovalidateDuplicateUser(Users user) {
+    public Optional<KakaoReqDto> kakaovalidateDuplicateUser(KakaoReqDto user) {
         return userRepository.findByUsername(user.getUsername());
     }
 
