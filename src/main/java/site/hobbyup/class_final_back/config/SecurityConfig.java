@@ -63,7 +63,11 @@ public class SecurityConfig {
                 .antMatchers("/api/expert/**").authenticated()
                 .antMatchers("/api/admin/**").hasRole("ROLE_" + UserEnum.ADMIN)
                 .antMatchers("/h2-console/**").permitAll()
-                .anyRequest().permitAll();
+                .anyRequest().permitAll()
+
+                .and()
+                .oauth2Login().defaultSuccessUrl("/login-success").successHandler(oAuth2AuthenticationSuccessHandler)
+                .userInfoEndpoint().userService(userOAuth2Service);
         // http.logout() // 로그아웃 기능 작동함
         // .logoutUrl("/logout") // 로그아웃 처리 URL, default: /logout, 원칙적으로 post 방식만 지원
         // .logoutSuccessUrl("/login") // 로그아웃 성공 후 이동페이지
