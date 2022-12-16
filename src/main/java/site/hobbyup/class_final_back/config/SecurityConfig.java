@@ -2,6 +2,7 @@ package site.hobbyup.class_final_back.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,12 +19,19 @@ import lombok.RequiredArgsConstructor;
 import site.hobbyup.class_final_back.config.enums.UserEnum;
 import site.hobbyup.class_final_back.config.jwt.JwtAuthenticationFilter;
 import site.hobbyup.class_final_back.config.jwt.JwtAuthorizationFilter;
+import site.hobbyup.class_final_back.oauth.service.UserOAuthService;
 import site.hobbyup.class_final_back.util.CustomResponseUtil;
 
 @RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Autowired
+    private UserOAuthService userOAuthService;
+
+    @Autowired
+    private OAuthAuthenticationSuccessHandler oAuthAuthenticationSuccessHandler;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -66,8 +74,8 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
 
                 .and()
-                .oauth2Login().defaultSuccessUrl("/login-success").successHandler(oAuth2AuthenticationSuccessHandler)
-                .userInfoEndpoint().userService(userOAuth2Service);
+                .oauth2Login().defaultSuccessUrl("/login-success").successHandler(oAuthAuthenticationSuccessHandler)
+                .userInfoEndpoint().userService(userOAuthService);
         // http.logout() // 로그아웃 기능 작동함
         // .logoutUrl("/logout") // 로그아웃 처리 URL, default: /logout, 원칙적으로 post 방식만 지원
         // .logoutSuccessUrl("/login") // 로그아웃 성공 후 이동페이지
