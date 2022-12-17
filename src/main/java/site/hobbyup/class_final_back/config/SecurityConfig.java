@@ -5,10 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,8 +22,6 @@ import site.hobbyup.class_final_back.util.CustomResponseUtil;
 
 @RequiredArgsConstructor
 @Configuration
-@EnableWebSecurity // 시큐리티 필터가 등록
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -34,12 +29,6 @@ public class SecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() {
         log.debug("디버그 : passwordEncoder Bean 등록됨");
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
     }
 
     public class MyCustomDsl extends AbstractHttpConfigurer<MyCustomDsl, HttpSecurity> {
@@ -75,6 +64,7 @@ public class SecurityConfig {
                 .antMatchers("/api/admin/**").hasRole("ROLE_" + UserEnum.ADMIN)
                 .antMatchers("/h2-console/**").permitAll()
                 .anyRequest().permitAll();
+
         // http.logout() // 로그아웃 기능 작동함
         // .logoutUrl("/logout") // 로그아웃 처리 URL, default: /logout, 원칙적으로 post 방식만 지원
         // .logoutSuccessUrl("/login") // 로그아웃 성공 후 이동페이지
@@ -95,5 +85,4 @@ public class SecurityConfig {
 
         return source;
     }
-
 }
